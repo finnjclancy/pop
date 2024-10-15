@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pop - Enhanced Shopping Website</title>
+    <style>
+        :root {
+            --orange: #FF9F1C;
+            --light-orange: #FFBF69;
+            --dark-orange: #E88C00;
+            --white: #FFFFFF;
+            --gray: #F0F0F0;
+            --dark-gray: #333333;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--gray);
+            color: var(--orange);
+        }
+        .logo {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--orange);
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        nav {
+            background-color: var(--orange);
+            width: 100%;
+            padding: 10px 0;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        nav a {
+            margin: 0 10px;
+            text-decoration: none;
+            color: var(--white);
+            font-weight: bold;
+            transition: all 0.3s ease;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        nav a:hover, nav a.active {
+            background-color: var(--white);
+            color: var(--orange);
+        }
+        .page {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--white);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .item {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            background-color: var(--orange);
+            padding: 10px;
+            border-radius: 5px;
+            color: var(--white);
+            transition: all 0.3s ease;
+        }
+        .item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        input, button, select {
+            margin: 5px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        input, select {
+            width: 200px;
+            border: 1px solid var(--orange);
+        }
+        input:focus, select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--light-orange);
+        }
+        button {
+            background-color: var(--orange);
+            color: var(--white);
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: var(--dark-orange);
+        }
+        h2 {
+            color: var(--orange);
+            margin-bottom: 20px;
+        }
+        #listItems, #homeItems, #historyItems {
+            width: 100%;
+        }
+        .empty-message {
+            color: var(--orange);
+            text-align: center;
+            margin-top: 20px;
+            font-style: italic;
+        }
+        .category {
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        .category-title {
+            background-color: var(--light-orange);
+            color: var(--white);
+            padding: 10px;
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+        }
+        .category-items {
+            background-color: var(--white);
+            border: 1px solid var(--light-orange);
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            padding: 10px;
+        }
+        .history-item {
+            background-color: var(--gray);
+            color: var(--dark-gray);
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo">pop</div>
+    <nav>
+        <a href="#" onclick="showPage('search')" id="searchNav">Search</a>
+        <a href="#" onclick="showPage('list')" id="listNav">Shopping List</a>
+        <a href="#" onclick="showPage('home')" id="homeNav">Home</a>
+        <a href="#" onclick="showPage('history')" id="historyNav">History</a>
+    </nav>
+
+    <div id="search" class="page">
+        <h2>Search</h2>
+        <div>
+            <input type="text" id="searchInput" placeholder="Enter item">
+            <button onclick="addToHome()">Add to Home</button>
+            <button onclick="addToList()">Add to List</button>
+        </div>
+    </div>
+
+    <div id="list" class="page" style="display:none;">
+        <h2>Shopping List</h2>
+        <div id="listItems"></div>
+    </div>
+
+    <div id="home" class="page" style="display:none;">
+        <h2>Home</h2>
+        <div id="homeItems"></div>
+    </div>
+
+    <div id="history" class="page" style="display:none;">
+        <h2>History</h2>
+        <div id="historyItems"></div>
+    </div>
+
+    <script>
+        let listItems = JSON.parse(localStorage.getItem('listItems')) || [];
+        let homeItems = JSON.parse(localStorage.getItem('homeItems')) || [];
+        let historyItems = JSON.parse(localStorage.getItem('historyItems')) || [];
+
+        const categories = {
+            'Dairy': ['Milk', 'Cheese', 'Yogurt', 'Butter', 'Cream'],
+            'Fruits': ['Apple', 'Banana', 'Orange', 'Strawberry', 'Grape'],
+            'Vegetables': ['Carrot', 'Broccoli', 'Tomato', 'Lettuce', 'Cucumber'],
+            'Meat': ['Chicken', 'Beef', 'Pork', 'Fish', 'Turkey'],
+            'Grains': ['Bread', 'Rice', 'Pasta', 'Cereal', 'Oats'],
+            'Snacks': ['Chips', 'Cookies', 'Popcorn', 'Nuts', 'Candy'],
+            'Beverages': ['Water', 'Soda', 'Juice', 'Coffee', 'Tea'],
+            'Household': ['Soap', 'Detergent', 'Paper Towels', 'Toilet Paper', 'Trash Bags']
+        };
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.style.display = 'none');
+            document.getElementById(pageId).style.display = 'flex';
+            if (pageId === 'list') renderList();
+            if (pageId === 'home') renderHome();
+            if (pageId === 'history') renderHistory();
+            
+            // Update active nav link
+            document.querySelectorAll('nav a').forEach(link => link.classList.remove('active'));
+            document.getElementById(pageId + 'Nav').classList.add('active');
+        }
+
+        function addToList() {
+            const item = document.getElementById('searchInput').value.trim();
+            if (item) {
+                listItems.push(item);
+                historyItems.push({item: item, destination: 'Shopping List', date: new Date().toLocaleString()});
+                saveData();
+                document.getElementById('searchInput').value = '';
+                showPage('list');
+            }
+        }
+
+        function addToHome() {
+            const item = document.getElementById('searchInput').value.trim();
+            if (item) {
+                homeItems.push(item);
+                historyItems.push({item: item, destination: 'Home', date: new Date().toLocaleString()});
+                saveData();
+                document.getElementById('searchInput').value = '';
+                showPage('home');
+            }
+        }
+
+        function deleteFromList(index) {
+            listItems.splice(index, 1);
+            saveData();
+            renderList();
+        }
+
+        function deleteFromHome(index) {
+            homeItems.splice(index, 1);
+            saveData();
+            renderHome();
+        }
+
+        function moveToHome(index) {
+            const item = listItems[index];
+            homeItems.push(item);
+            listItems.splice(index, 1);
+            historyItems.push({item: item, destination: 'Home', date: new Date().toLocaleString()});
+            saveData();
+            renderList();
+        }
+
+        function moveToList(index) {
+            const item = homeItems[index];
+            listItems.push(item);
+            homeItems.splice(index, 1);
+            historyItems.push({item: item, destination: 'Shopping List', date: new Date().toLocaleString()});
+            saveData();
+            renderHome();
+        }
+
+        function getCategory(item) {
+            for (let [category, items] of Object.entries(categories)) {
+                if (items.some(catItem => item.toLowerCase().includes(catItem.toLowerCase()))) {
+                    return category;
+                }
+            }
+            return 'Other';
+        }
+
+        function renderList() {
+            const listContainer = document.getElementById('listItems');
+            listContainer.innerHTML = '';
+            if (listItems.length === 0) {
+                listContainer.innerHTML = '<p class="empty-message">Your shopping list is empty. Add items from the search page.</p>';
+                return;
+            }
+            
+            const categorizedItems = {};
+            listItems.forEach(item => {
+                const category = getCategory(item);
+                if (!categorizedItems[category]) {
+                    categorizedItems[category] = [];
+                }
+                categorizedItems[category].push(item);
+            });
+
+            for (let [category, items] of Object.entries(categorizedItems)) {
+                const categoryElement = document.createElement('div');
+                categoryElement.className = 'category';
+                categoryElement.innerHTML = `
+                    <div class="category-title">${category}</div>
+                    <div class="category-items">
+                        ${items.map((item, index) => `
+                            <div class="item">
+                                <span>${item}</span>
+                                <div>
+                                    <button onclick="deleteFromList(${listItems.indexOf(item)})">Delete</button>
+                                    <button onclick="moveToHome(${listItems.indexOf(item)})">Add to Home</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                listContainer.appendChild(categoryElement);
+            }
+        }
+
+        function renderHome() {
+            const homeContainer = document.getElementById('homeItems');
+            homeContainer.innerHTML = '';
+            if (homeItems.length === 0) {
+                homeContainer.innerHTML = '<p class="empty-message">Your home list is empty. Add items from the search page.</p>';
+                return;
+            }
+            
+            const categorizedItems = {};
+            homeItems.forEach(item => {
+                const category = getCategory(item);
+                if (!categorizedItems[category]) {
+                    categorizedItems[category] = [];
+                }
+                categorizedItems[category].push(item);
+            });
+
+            for (let [category, items] of Object.entries(categorizedItems)) {
+                const categoryElement = document.createElement('div');
+                categoryElement.className = 'category';
+                categoryElement.innerHTML = `
+                    <div class="category-title">${category}</div>
+                    <div class="category-items">
+                        ${items.map((item, index) => `
+                            <div class="item">
+                                <span>${item}</span>
+                                <div>
+                                    <button onclick="deleteFromHome(${homeItems.indexOf(item)})">Delete</button>
+                                    <button onclick="moveToList(${homeItems.indexOf(item)})">Add to List</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                homeContainer.appendChild(categoryElement);
+            }
+        }
+
+        function renderHistory() {
+            const historyContainer = document.getElementById('historyItems');
+            historyContainer.innerHTML = '';
+            if (historyItems.length === 0) {
+                historyContainer.innerHTML = '<p class="empty-message">No history yet. Start adding items to see your history.</p>';
+                return;
+            }
+            historyItems.slice().reverse().forEach((historyItem, index) => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'history-item';
+                itemElement.innerHTML = `
+                    <span>${historyItem.item} - Added to ${historyItem.destination} on ${historyItem.date}</span>
+                `;
+                historyContainer.appendChild(itemElement);
+            });
+        }
+
+        function saveData() {
+            localStorage.setItem('listItems', JSON.stringify(listItems));
+            localStorage.setItem('homeItems', JSON.stringify(homeItems));
+            localStorage.setItem('historyItems', JSON.stringify(historyItems));
+        }
+
+        // Autocomplete functionality
+        const searchInput = document.getElementById('searchInput');
+        const allItems = Object.values(categories).flat();
+        
+        searchInput.addEventListener('input', function() {
+            const inputValue = this.value.toLowerCase();
+            const matchingItems = allItems.filter(item => item.toLowerCase().startsWith(inputValue));
+            
+            if (matchingItems.length > 0 && inputValue.length > 0) {
+                const datalist = document.getElementById('autocomplete-items') || document.createElement('datalist');
+                datalist.id = 'autocomplete-items';
+                datalist.innerHTML = matchingItems.map(item => `<option value="${item}">`).join('');
+                this.setAttribute('list', 'autocomplete-items');
+                if (!document.getElementById('autocomplete-items')) {
+                    document.body.appendChild(datalist);
+                }
+            } else {
+                this.removeAttribute('list');
+            }
+        });
+
+        // Initial render
+        showPage('search');
+    </script>
+</body>
+</html>
